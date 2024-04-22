@@ -266,6 +266,7 @@ body.popup-open {
 
 #chuanhu-header {
     position: fixed;
+    display: none;
     top: 0;
     z-index: 1000;
     left: 0;
@@ -302,8 +303,8 @@ body.popup-open {
     /* margin-top: 54px; */
     /* height: calc(100*var(--vh) - 72px); */
     position: absolute;
-    top: 65px;
-    height: calc(100*var(--vh) - 65px);
+    top: 0px;
+    height: calc(100*var(--vh) - 0px);
 }
 
 #chuanhu-area {
@@ -322,6 +323,7 @@ body.popup-open {
     background: var(--chatbot-background-color-dark);
 }
 #chatbot-header {
+    display: none;
     justify-content: space-between;
     border-bottom: 0.5px solid var(--border-color-primary);
     height: 60px;
@@ -574,6 +576,7 @@ button.chatbot-input-more-btn:active .sm-round-bg {
     flex-wrap: nowrap;
     flex-direction: row-reverse;
     display: inline-flex;
+    display:none;
 }
 .chatbot-input-more-span {
     opacity: 0.64;
@@ -636,6 +639,7 @@ input:checked + .chatbot-input-more-span {
     padding-left: env(safe-area-inset-left);
 }
 #menu-area.showSide {
+    display: none; 
     width: var(--menu-width);
     max-width: var(--menu-width);
     height: calc(100*var(--vh) - 65px);
@@ -649,6 +653,7 @@ input:checked + .chatbot-input-more-span {
     width: var(--toolbox-width);
 }
 #toolbox-area.showSide {
+    display:none;
     width: var(--toolbox-width);
     height: calc(100*var(--vh) - 65px);
     visibility: visible;
