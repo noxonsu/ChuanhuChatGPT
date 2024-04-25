@@ -16,6 +16,8 @@ from modules.config import *
 from modules import config
 import gradio as gr
 import colorama
+from urllib.parse import parse_qs, urlparse
+import requests
 
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
@@ -500,6 +502,34 @@ with gr.Blocks(theme=small_and_beautiful_theme) as demo:
     # https://github.com/gradio-app/gradio/pull/3296
 
     def create_greeting(request: gr.Request):
+        
+
+        
+        sensorica_client_id = request.request.query_params.get('sensorica_client_id', '0')
+        post_id = request.request.query_params.get('post_id', '0')
+
+        # check if sensorica_client_id is valid 
+        if sensorica_client_id == '0' or post_id == '0':
+            logging.info(f"Invalid sensorica_client_id or post_id")
+            return False,
+    
+        backsensorica = 'http://localhost:3011'
+        backsensorica = 'https://telegram.onout.org'
+        url = f"{backsensorica}/proxyChat?sensorica_client_id={sensorica_client_id}&post_id={post_id}"
+        
+        response = requests.get(url)
+        #check status code
+        if response.status_code != 200:
+            logging.info(f"Error in getting response from sensoricaBackend/proxyChat")
+            return False,
+        responsedata = response.json()
+        key = responsedata['data']['API_KEY']
+        system_prompt = responsedata['data']['SYSTEM_PROMPT']
+        sensorica_model = responsedata['data']['sensorica_openai_model']
+        if (sensorica_model == 'gpt-4-turbo-preview'):
+             DEFAULT_MODEL = 8;
+        my_api_key = key;
+        
         if hasattr(request, "username") and request.username:  # is not None or is not ""
             logging.info(f"Get User Name: {request.username}")
             user_info, user_name = gr.Markdown(
@@ -510,8 +540,8 @@ with gr.Blocks(theme=small_and_beautiful_theme) as demo:
         current_model = get_model(
             model_name=MODELS[DEFAULT_MODEL], access_key=my_api_key, user_name=user_name)[0]
         
+        current_model.system_prompt = system_prompt; #noxon
 
-        current_model.system_prompt = request.request.query_params.get('sys_prompt') if request.query_params.get("sys_prompt") is not None else INITIAL_SYSTEM_PROMPT
         if not hide_history_when_not_logged_in or user_name:
             loaded_stuff = current_model.auto_load()
         else:

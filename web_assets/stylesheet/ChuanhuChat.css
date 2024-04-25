@@ -266,7 +266,7 @@ body.popup-open {
 
 #chuanhu-header {
     position: fixed;
-    display: none;
+    display: none; /* hidden by noxon */
     top: 0;
     z-index: 1000;
     left: 0;
@@ -303,8 +303,8 @@ body.popup-open {
     /* margin-top: 54px; */
     /* height: calc(100*var(--vh) - 72px); */
     position: absolute;
-    top: 0px;
-    height: calc(100*var(--vh) - 0px);
+    top: 0px; /* 65px */
+    height: calc(100*var(--vh) - 0px); /* 65px */
 }
 
 #chuanhu-area {
@@ -576,8 +576,13 @@ button.chatbot-input-more-btn:active .sm-round-bg {
     flex-wrap: nowrap;
     flex-direction: row-reverse;
     display: inline-flex;
-    display:none;
 }
+/* noxon */ 
+
+#chatbot-input-more-area > span:first-child {
+    display: none;
+}
+
 .chatbot-input-more-span {
     opacity: 0.64;
 }
@@ -653,7 +658,7 @@ input:checked + .chatbot-input-more-span {
     width: var(--toolbox-width);
 }
 #toolbox-area.showSide {
-    display:none;
+    display:none; /* hidden by noxon правай колонка */
     width: var(--toolbox-width);
     height: calc(100*var(--vh) - 65px);
     visibility: visible;
