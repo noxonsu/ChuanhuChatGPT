@@ -265,7 +265,7 @@ HISTORY_NAME_METHODS = [
 ]
 
 DIRECTLY_SUPPORTED_IMAGE_FORMATS = (".png", ".jpeg", ".gif", ".webp") # image types that can be directly uploaded, other formats will be converted to jpeg
-IMAGE_FORMATS = DIRECTLY_SUPPORTED_IMAGE_FORMATS + (".jpg", ".bmp", "heic", "heif") # all supported image formats
+IMAGE_FORMATS = DIRECTLY_SUPPORTED_IMAGE_FORMATS + (".jpg", ".bmp", ".pdf","heic", "heif") # all supported image formats
 
 
 WEBSEARCH_PTOMPT_TEMPLATE = """\

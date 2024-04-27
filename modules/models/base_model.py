@@ -33,7 +33,7 @@ from ..config import retrieve_proxy
 from ..index_func import *
 from ..presets import *
 from ..utils import *
-
+from pdf2image import convert_from_path
 
 class CallbackToIterator:
     def __init__(self):
@@ -1136,16 +1136,23 @@ class BaseLLMModel:
         torch.cuda.empty_cache()
 
     def get_base64_image(self, image_path):
+        DIRECTLY_SUPPORTED_IMAGE_FORMATS = ('.png', '.jpg', '.jpeg', '.bmp', '.gif')
+
         if image_path.endswith(DIRECTLY_SUPPORTED_IMAGE_FORMATS):
             with open(image_path, "rb") as f:
                 return base64.b64encode(f.read()).decode("utf-8")
+        elif image_path.endswith('.pdf'):
+            # Convert first page of the PDF to an image
+            images = convert_from_path(image_path)
+            base64_images = []
+            for image in images:
+                buffer = BytesIO()
+                image.convert("RGB").save(buffer, format="JPEG")
+                base64_encoded = base64.b64encode(buffer.getvalue()).decode("utf-8")
+                base64_images.append(base64_encoded)
+            return base64_images
         else:
-            # convert to jpeg
-            image = PIL.Image.open(image_path)
-            image = image.convert("RGB")
-            buffer = BytesIO()
-            image.save(buffer, format="JPEG")
-            return base64.b64encode(buffer.getvalue()).decode("utf-8")
+            raise ValueError("Unsupported file format")
 
     def get_image_type(self, image_path):
         if image_path.lower().endswith(DIRECTLY_SUPPORTED_IMAGE_FORMATS):
