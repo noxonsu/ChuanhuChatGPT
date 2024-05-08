@@ -523,9 +523,13 @@ with gr.Blocks(theme=small_and_beautiful_theme) as demo:
         url = f"{backsensorica}/proxyChat?sensorica_client_id={sensorica_client_id}&post_id={post_id}"
         
         response = requests.get(url)
+        responsedata = response.json()
         #check status code
         if response.status_code != 200:
-            logging.info(f"Error in getting response from ", url)
+            
+            logging.info(f"Error in getting response from {url}")
+            #print responsedata
+            logging.info(f"Response: {responsedata}")
             return False,
         responsedata = response.json()
         key = responsedata['data']['API_KEY']
