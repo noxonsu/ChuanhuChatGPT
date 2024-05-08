@@ -526,7 +526,7 @@ with gr.Blocks(theme=small_and_beautiful_theme) as demo:
         responsedata = response.json()
         #check status code
         if response.status_code != 200:
-            
+            logging.info(f"PRODUCTION {os.getenv('PRODUCTION')}")
             logging.info(f"Error in getting response from {url}")
             #print responsedata
             logging.info(f"Response: {responsedata}")
