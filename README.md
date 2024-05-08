@@ -197,8 +197,10 @@ python ChuanhuChatbot.py
 
 # for devops
 на машине с докератором 
+```
 cd ~/Chu Tab
 git pull
 systemctl stop chuanhuchatbot.service
 systemctl start chuanhuchatbot.service
 journalctl -fu chuanhuchatbot.service
+```
