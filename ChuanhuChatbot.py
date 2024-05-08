@@ -513,14 +513,19 @@ with gr.Blocks(theme=small_and_beautiful_theme) as demo:
             logging.info(f"Invalid sensorica_client_id or post_id")
             return False,
     
-        backsensorica = 'http://localhost:3011'
+
         backsensorica = 'https://telegram.onout.org'
+        
+        #check if in .env file is production
+        if os.getenv("PRODUCTION") == '1':
+            backsensorica = 'http://localhost:3011' 
+
         url = f"{backsensorica}/proxyChat?sensorica_client_id={sensorica_client_id}&post_id={post_id}"
         
         response = requests.get(url)
         #check status code
         if response.status_code != 200:
-            logging.info(f"Error in getting response from sensoricaBackend/proxyChat")
+            logging.info(f"Error in getting response from ", url)
             return False,
         responsedata = response.json()
         key = responsedata['data']['API_KEY']
