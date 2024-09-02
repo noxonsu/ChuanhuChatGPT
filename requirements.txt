@@ -1,5 +1,6 @@
 gradio==4.26.0
 gradio_client==0.15.1
+primp==0.5.5
 pypinyin
 tiktoken
 socksio
@@ -12,6 +13,7 @@ langchain==0.1.14
 langchain-openai
 langchainhub
 langchain_community
+groq
 markdown
 PyPDF2
 pdfplumber

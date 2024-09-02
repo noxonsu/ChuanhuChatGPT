@@ -129,6 +129,7 @@ class ChuanhuCallbackHandler(BaseCallbackHandler):
             containing content and other information.
         """
         logging.info(f"### CHUNK ###: {chunk}")
+        self.callback(token)
 
 
 class ModelType(Enum):
@@ -155,9 +156,18 @@ class ModelType(Enum):
     GoogleGemini = 19
     GoogleGemma = 20
     Ollama = 21
+    Groq = 22
 
     @classmethod
     def get_type(cls, model_name: str):
+        # 1. get model type from model metadata (if exists)
+        model_type = MODEL_METADATA[model_name]["model_type"]
+        if model_type is not None:
+            for member in cls:
+                if member.name == model_type:
+                    return member
+
+        # 2. infer model type from model name
         model_type = None
         model_name_lower = model_name.lower()
         if "gpt" in model_name_lower:
@@ -173,6 +183,8 @@ class ModelType(Enum):
                     model_type = ModelType.OpenAI
         elif "chatglm" in model_name_lower:
             model_type = ModelType.ChatGLM
+        elif "groq" in model_name_lower:
+            model_type = ModelType.Groq
         elif "ollama" in model_name_lower:
             model_type = ModelType.Ollama
         elif "llama" in model_name_lower or "alpaca" in model_name_lower:
@@ -197,7 +209,7 @@ class ModelType(Enum):
             model_type = ModelType.Midjourney
         elif "azure" in model_name_lower or "api" in model_name_lower:
             model_type = ModelType.LangchainChat
-        elif "星火大模型" in model_name_lower:
+        elif "讯飞星火" in model_name_lower:
             model_type = ModelType.Spark
         elif "claude" in model_name_lower:
             model_type = ModelType.Claude
@@ -246,69 +258,60 @@ class BaseLLMModel:
     def __init__(
         self,
         model_name,
-        system_prompt=INITIAL_SYSTEM_PROMPT,
-        temperature=1.0,
-        top_p=1.0,
-        n_choices=1,
-        stop=[],
-        max_generation_token=None,
-        presence_penalty=0,
-        frequency_penalty=0,
-        logit_bias=None,
         user="",
-        single_turn=False,
+        config=None,
     ) -> None:
+
+        if config is not None:
+            temp = MODEL_METADATA[model_name].copy()
+            keys_with_diff_values = {key: temp[key] for key in temp if key in DEFAULT_METADATA and temp[key] != DEFAULT_METADATA[key]}
+            config.update(keys_with_diff_values)
+            temp.update(config)
+            config = temp
+        else:
+            config = MODEL_METADATA[model_name]
+
+        self.model_name = config["model_name"]
+        self.multimodal = config["multimodal"]
+        self.description = config["description"]
+        self.placeholder = config["placeholder"]
+        self.token_upper_limit = config["token_limit"]
+        self.system_prompt = config["system"]
+        self.api_key = config["api_key"]
+        self.api_host = config["api_host"]
+
+        self.interrupted = False
+        self.need_api_key = self.api_key is not None
         self.history = []
         self.all_token_counts = []
         self.model_type = ModelType.get_type(model_name)
-        try:
-            self.model_name = MODEL_METADATA[model_name]["model_name"]
-        except:
-            self.model_name = model_name
-        try:
-            self.multimodal = MODEL_METADATA[model_name]["multimodal"]
-        except:
-            self.multimodal = False
-        if max_generation_token is None:
-            try:
-                max_generation_token = MODEL_METADATA[model_name]["max_generation"]
-            except:
-                pass
-        try:
-            self.token_upper_limit = MODEL_METADATA[model_name]["token_limit"]
-        except KeyError:
-            self.token_upper_limit = DEFAULT_TOKEN_LIMIT
-        self.interrupted = False
-        self.system_prompt = system_prompt
-        self.api_key = None
-        self.need_api_key = False
         self.history_file_path = get_first_history_name(user)
         self.user_name = user
         self.chatbot = []
 
-        self.default_single_turn = single_turn
-        self.default_temperature = temperature
-        self.default_top_p = top_p
-        self.default_n_choices = n_choices
-        self.default_stop_sequence = stop
-        self.default_max_generation_token = max_generation_token
-        self.default_presence_penalty = presence_penalty
-        self.default_frequency_penalty = frequency_penalty
-        self.default_logit_bias = logit_bias
+        self.default_single_turn = config["single_turn"]
+        self.default_temperature = config["temperature"]
+        self.default_top_p = config["top_p"]
+        self.default_n_choices = config["n_choices"]
+        self.default_stop_sequence = config["stop"]
+        self.default_max_generation_token = config["max_generation"]
+        self.default_presence_penalty = config["presence_penalty"]
+        self.default_frequency_penalty = config["frequency_penalty"]
+        self.default_logit_bias = config["logit_bias"]
         self.default_user_identifier = user
 
-        self.single_turn = single_turn
-        self.temperature = temperature
-        self.top_p = top_p
-        self.n_choices = n_choices
-        self.stop_sequence = stop
-        self.max_generation_token = max_generation_token
-        self.presence_penalty = presence_penalty
-        self.frequency_penalty = frequency_penalty
-        self.logit_bias = logit_bias
+        self.single_turn = self.default_single_turn
+        self.temperature = self.default_temperature
+        self.top_p = self.default_top_p
+        self.n_choices = self.default_n_choices
+        self.stop_sequence = self.default_stop_sequence
+        self.max_generation_token = self.default_max_generation_token
+        self.presence_penalty = self.default_presence_penalty
+        self.frequency_penalty = self.default_frequency_penalty
+        self.logit_bias = self.default_logit_bias
         self.user_identifier = user
 
-        self.metadata = {}
+        self.metadata = config["metadata"]
 
     def get_answer_stream_iter(self):
         """Implement stream prediction.
@@ -867,7 +870,7 @@ class BaseLLMModel:
         choices = get_history_names(self.user_name)
         if history_name not in choices:
             choices.insert(0, history_name)
-        system_prompt = self.system_prompt if remain_system_prompt else ""
+        system_prompt = self.system_prompt if remain_system_prompt else INITIAL_SYSTEM_PROMPT
 
         self.single_turn = self.default_single_turn
         self.temperature = self.default_temperature
@@ -1051,7 +1054,7 @@ class BaseLLMModel:
             return (
                 os.path.basename(self.history_file_path)[:-5],
                 saved_json["system"],
-                saved_json["chatbot"],
+                gr.update(value=saved_json["chatbot"]),
                 self.single_turn,
                 self.temperature,
                 self.top_p,
@@ -1070,8 +1073,8 @@ class BaseLLMModel:
             self.reset()
             return (
                 os.path.basename(self.history_file_path),
-                "",
-                [],
+                self.system_prompt,
+                gr.update(value=[]),
                 self.single_turn,
                 self.temperature,
                 self.top_p,
