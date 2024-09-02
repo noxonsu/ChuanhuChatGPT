@@ -542,7 +542,7 @@ with gr.Blocks(theme=small_and_beautiful_theme) as demo:
         system_prompt = responsedata['data']['SYSTEM_PROMPT']
         sensorica_model = responsedata['data']['sensorica_openai_model']
         if (sensorica_model == 'gpt-4-turbo-preview'):
-             DEFAULT_MODEL = 8;
+             DEFAULT_MODEL = 2; #see modules presets.py
         my_api_key = key;
         os.environ["OPENAI_API_KEY"] = my_api_key #todo проверить изоляцию клиентов
 
